@@ -6,6 +6,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.occidere.dailyomg.util.Pair;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -21,8 +22,8 @@ public class Crawler {
 	@Setter
 	private int recentRange = 1;
 
-	public List<String> getImageList() {
-		List<String> imageList = new LinkedList<>();
+	public List<Pair<String, String>> getImageList() {
+		List<Pair<String, String>> imageList = new LinkedList<>();
 		List<String> galleryUrlList = getGalleryList();
 
 		for (String galleryUrl : galleryUrlList) {
@@ -33,18 +34,24 @@ public class Crawler {
 			}
 		}
 
+		System.out.println(imageList);
+
 		return imageList;
 	}
 
-	private List<String> getImageUrlList(String url) throws IOException {
-		List<String> imageUrlList = new LinkedList<>();
+	private List<Pair<String, String>> getImageUrlList(String url) throws IOException {
+		List<Pair<String, String>> imageUrlList = new LinkedList<>();
 
 		Document doc = Jsoup.connect(url).userAgent("Mozilla/5.0").get();
-		Elements viewContents = doc.getElementsByClass("view-content");
+		Elements viewWraps = doc.getElementsByClass("view-wrap");
 
-		for (Element viewContent : viewContents) {
-			String imageUrl = viewContent.select("img").attr("src");
-			imageUrlList.add(imageUrl);
+		for (Element viewWrap : viewWraps) {
+			String title = viewWrap.getElementsByTag("h1").text();
+			String imageUrl = viewWrap.getElementsByClass("view-content")
+					.select("img")
+					.attr("src");
+
+			imageUrlList.add(new Pair(title, imageUrl));
 		}
 
 
@@ -95,5 +102,10 @@ public class Crawler {
 		int days = Period.between(postDate, LocalDate.now()).getDays();
 
 		return days <= recentRange;
+	}
+
+	public static void main(String[] args) throws Exception {
+		Crawler crawler = new Crawler();
+		crawler.getImageList();
 	}
 }
