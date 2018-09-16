@@ -1,25 +1,17 @@
 package org.occidere.dailyomg.crawler.main;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import org.occidere.dailyomg.crawler.Crawler;
+import org.occidere.dailyomg.notification.LineNotify;
 
 public class Main {
-	static String galleryUrl = "http://ohmygirl.ml/bbs/board.php?bo_table=gallery&page=1"; // div class=list-desc
-	static String postUrl = "http://ohmygirl.ml/bbs/board.php?bo_table=gallery&wr_id=2552"; // div class=view-content
+	public static void main(String[] args) {
+		Crawler crawler = new Crawler();
 
-	public static void main(String[] args) throws Exception {
-		HttpURLConnection conn = (HttpURLConnection) new URL(galleryUrl).openConnection();
-		conn.setRequestProperty("User-Agent", "Mozilla/5.0");
-
-		BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-		String line;
-		while ((line = br.readLine()) != null) {
-			System.out.println(line);
+		if(args.length == 1) {
+			crawler.setRecentRange(Integer.parseInt(args[0]));
 		}
 
-
-		br.close();
+		LineNotify lineNotify = new LineNotify();
+		lineNotify.sendImages(crawler.getImageList());
 	}
 }
