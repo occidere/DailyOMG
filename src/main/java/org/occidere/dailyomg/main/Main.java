@@ -1,4 +1,4 @@
-package org.occidere.dailyomg.crawler.main;
+package org.occidere.dailyomg.main;
 
 import org.occidere.dailyomg.crawler.Crawler;
 import org.occidere.dailyomg.notification.LineNotify;
