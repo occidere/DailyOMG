@@ -33,5 +33,5 @@ Currently not supported. I'm working on it!
 Currently not supported. I'm working on it!
 
 ### 4. Email
-Currently not supoprted. I'm working on it!
+Currently not supported. I'm working on it!
 
