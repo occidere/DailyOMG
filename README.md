@@ -32,4 +32,6 @@ Currently not supported. I'm working on it!
 ### 3. KakaoTalk
 Currently not supported. I'm working on it!
 
+### 4. Email
+Currently not supoprted. I'm working on it!
 
