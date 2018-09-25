@@ -64,6 +64,6 @@ public class LineNotify {
 		}
 		br.close();
 
-		log.info("{}", res.toString());
+		log.info("{} => {}", image, res.toString());
 	}
 }
