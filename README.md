@@ -20,7 +20,7 @@ So, You need to generate your own Line Notify API key in [here](https://notify-b
 
 **How to use?**
 
-1. Add your api key in `line.properties`
+1. Add your api key in `resources/application.properties` OR set env as `export line_notify_api_key='...'`
     * Generate key in [here](https://notify-bot.line.me/my/)
 2. Build jar with maven
 3. Run jar file on server!
