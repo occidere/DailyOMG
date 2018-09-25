@@ -32,7 +32,7 @@ public class DailyOmgController {
 
 	@GetMapping("/test/request/ohmygirl/image")
 	public void event() throws Exception {
-		HttpURLConnection conn = (HttpURLConnection) new URL("http://localhost:8081/request/ohmygirl/image?range=1")
+		HttpURLConnection conn = (HttpURLConnection) new URL("http://localhost:8080/request/ohmygirl/image?range=1")
 				.openConnection();
 
 		ObjectMapper mapper = new ObjectMapper();
