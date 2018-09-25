@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.occidere.dailyomg.crawler.Crawler;
 import org.occidere.dailyomg.notification.LineNotify;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -17,6 +18,9 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 public class DailyOmgController {
 
+	@Autowired
+	private LineNotify lineNotify;
+
 	@RequestMapping(value = "/request/ohmygirl/image", method = RequestMethod.GET)
 	public Mono<List<LinkedHashMap<String, String>>> requestOhmygirlImage(@RequestParam(value = "range", defaultValue = "1") int range) {
 		return Mono.fromSupplier(() -> getOhmygirlImageList(range));
@@ -24,10 +28,9 @@ public class DailyOmgController {
 
 	@RequestMapping(value = "/notify/line-notify", method = RequestMethod.GET)
 	public void notifyLineNotify(@RequestParam(value = "range", defaultValue = "1") int range) {
-		final LineNotify LINE_NOTIFY = new LineNotify();
 		CompletableFuture
 				.completedFuture(getOhmygirlImageList(range))
-				.thenAcceptAsync(LINE_NOTIFY::sendImages);
+				.thenAcceptAsync(lineNotify::sendImages);
 	}
 
 	@GetMapping("/test/request/ohmygirl/image")

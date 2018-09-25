@@ -1,31 +1,25 @@
 package org.occidere.dailyomg.notification;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
+@Component
 public class LineNotify {
+	@Value("${line.notify.api.key}")
 	private String apiKey;
 	private final String LINE_NOTIFY_API = "https://notify-api.line.me/api/notify";
-
-	public LineNotify() {
-		try {
-			init();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	private void init() throws Exception {
-		PropertiesConfiguration config = new PropertiesConfiguration("line.properties");
-		apiKey = config.getString("line.notify.api.key");
-	}
 
 	public void sendImages(List<LinkedHashMap<String, String>> LinkedHashMapList) {
 		for (LinkedHashMap<String, String> titleImageLinkedHashMap : LinkedHashMapList) {
