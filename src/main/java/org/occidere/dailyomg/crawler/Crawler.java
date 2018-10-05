@@ -31,6 +31,7 @@ public class Crawler {
 	/**
 	 * 각 이미지 리스트의 모든 이미지들을 모아서 하나의 이미지 리스트로 묶어 반환
 	 *
+	 *
 	 * @return 모든 이미지가 담긴 리스트
 	 */
 	public List<LinkedHashMap<String, String>> getImageList() {

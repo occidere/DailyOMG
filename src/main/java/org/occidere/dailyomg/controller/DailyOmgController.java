@@ -65,6 +65,16 @@ public class DailyOmgController {
 		}
 	}
 
+
+	/********** healt **********/
+
+	@RequestMapping(value = "/health", method = RequestMethod.GET)
+	public Mono<Long> healthCheck() {
+		log.info("Health Check!");
+		return Mono.just(System.currentTimeMillis());
+	}
+
+
 	/********** test **********/
 
 	@GetMapping("/test/request/ohmygirl/image")
