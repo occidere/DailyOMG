@@ -1,9 +1,10 @@
 package org.occidere.dailyomg.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
- import lombok.extern.slf4j.Slf4j;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.occidere.dailyomg.crawler.Crawler;
+import org.occidere.dailyomg.crawler.GalleryCrawler;
 import org.occidere.dailyomg.notification.LineNotify;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -75,27 +76,14 @@ public class DailyOmgController {
 	}
 
 
-	/********** test **********/
-
-	@GetMapping("/test/request/ohmygirl/image")
-	public Mono<List<LinkedHashMap<String, String>>> event() throws Exception {
-		HttpURLConnection conn = (HttpURLConnection) new URL("http://localhost:8080/request/ohmygirl/image?range=1")
-				.openConnection();
-
-		ObjectMapper mapper = new ObjectMapper();
-		List<LinkedHashMap<String, String>> imageLinkedHashMapList = mapper.readValue(conn.getInputStream(), List.class);
-
-		imageLinkedHashMapList.forEach(lhm ->log.info("{}", lhm.toString()));
-
-		return Mono.just(imageLinkedHashMapList);
-	}
-
 	@GetMapping("/")
 	public Mono<String> hello() {
 		return Mono.just("DailyOMG !!!");
 	}
 
 	private List<LinkedHashMap<String, String>> getOhmygirlImageList(int range) {
-		return new Crawler() {{ setRecentRange(range); }}.getImageList();
+		Crawler crawler = new GalleryCrawler();
+		crawler.setRange(range);
+		return crawler.getResult();
 	}
 }
