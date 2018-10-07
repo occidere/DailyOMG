@@ -130,6 +130,6 @@ public class GalleryCrawler extends Crawler {
 		LocalDate postDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yy.MM.dd"));
 		int days = Period.between(postDate, LocalDate.now()).getDays();
 
-		return days <= range;
+		return days >= range;
 	}
 }
