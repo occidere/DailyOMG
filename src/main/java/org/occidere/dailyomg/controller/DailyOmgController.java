@@ -60,7 +60,7 @@ public class DailyOmgController {
 	@RequestMapping(value = "/notify/line/ohmygirl/image", method = RequestMethod.GET)
 	public void notifyLineOhmygirlImage(@RequestParam(value = "range", defaultValue = "1") int range) throws Exception {
 		String jsonBody = new ObjectMapper().writeValueAsString(getOhmygirlImageList(range));
-		List<String> res = IOUtils.readLines(getResponse(jsonBody), "UTF-8");
+		List<String> res = IOUtils.readLines(getResponse(lineBotApiUrl + "/push/image", jsonBody), "UTF-8");
 		for(String line : res) {
 			log.info(line);
 		}
@@ -74,7 +74,7 @@ public class DailyOmgController {
 	@RequestMapping(value = "/notify/line/ohmygirl/schedule", method = RequestMethod.GET)
 	public void notifyLineOhmygirlSchedule(@RequestParam(value = "range", defaultValue = "1") int range) throws Exception {
 		String jsonBody = new ObjectMapper().writeValueAsString(getOhmygirlScheduleList(range));
-		List<String> res = IOUtils.readLines(getResponse(jsonBody), "UTF-8");
+		List<String> res = IOUtils.readLines(getResponse(lineBotApiUrl + "/push/text", jsonBody), "UTF-8");
 		for(String line : res) {
 			log.info(line);
 		}
@@ -112,8 +112,8 @@ public class DailyOmgController {
 	 * @return 응답 인풋 스트림
 	 * @throws Exception
 	 */
-	private InputStream getResponse(String jsonBody) throws Exception {
-		HttpURLConnection conn = (HttpURLConnection) new URL(lineBotApiUrl).openConnection();
+	private InputStream getResponse(String url, String jsonBody) throws Exception {
+		HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
 		conn.setRequestMethod("POST");
 		conn.setRequestProperty("Content-Type", "application/json");
 		conn.setDoInput(true);
