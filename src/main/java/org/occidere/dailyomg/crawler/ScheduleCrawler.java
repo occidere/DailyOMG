@@ -60,8 +60,8 @@ public class ScheduleCrawler extends Crawler {
 		date = String.format("%04d.%s", now.getYear(), date.substring(0, 5));
 
 		LocalDate postDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy.MM.dd"));
-		int days = Period.between(postDate, now).getDays();
+		int days = Period.between(now, postDate).getDays();
 
-		return days <= range;
+		return 0 <= days && days <= range;
 	}
 }
