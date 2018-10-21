@@ -2,14 +2,14 @@ package org.occidere.dailyomg.crawler;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.jsoup.Connection.Method;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,10 +19,8 @@ import java.io.File;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -55,7 +53,7 @@ public class InstagramCrawler extends Crawler {
 
 		ChromeOptions chromeOptions = new ChromeOptions();
 		chromeOptions.addArguments("headless");
-//		chromeOptions.addArguments("--window-size=1920,1080");
+		chromeOptions.addArguments("--window-size=1920,1080"); // 화면이 너무 작으면 > 클릭 버튼이 표시 안되서 에러남
 
 		WebDriver driver = new ChromeDriver(chromeOptions);
 		driver.get(url); // https://www.instagram.com/wm_ohmygirl/?hl=ko
@@ -139,35 +137,81 @@ public class InstagramCrawler extends Crawler {
 	private Map<String, List<LinkedHashMap<String, String>>> getDateContentMap(String postUrl) throws Exception {
 		log.info("Post URL: {}", postUrl);
 
-		Document doc = openConnection(postUrl, Method.GET, null, null);
-		Element article = doc.getElementsByTag("article").get(0);
+		Set<String> urlSet = new HashSet<>();
+		List<LinkedHashMap<String, String>> contentList = new ArrayList<>();
+		Map<String, List<LinkedHashMap<String, String>>> dataContentMap = new HashMap<>();
 
-		// ISO 8601 (2018-09-27T14:19:44.000Z)
-		String date = article.getElementsByTag("time").get(0).attr("datetime");
-		log.info("Post Date: {}", date);
+		WebDriver driver = getChromeDriver(postUrl); // 다음사진 보기용 오른쪽 클릭을 하기 위한 WebElement
+		String date = "";
 
-		// TODO: FFVAD 클래스명 변경 예의주시
-		// TODO: 포스팅 내 이미지는 기본으로 2개까지만 노출됨 -> 그 이외는 < > 버튼 눌렀을 때 리액트로 생김. 이 부분 어떻게 할 것인지 고려
-		List<LinkedHashMap<String, String>> contentList = article.getElementsByClass("FFVAD").stream()
-				.map(imgTag -> new LinkedHashMap<String, String>() {{
-					// 제목에 포함된 개행문자 제거
-					put(imgTag.attr("alt").replaceAll("[\\n\\r]", ""), imgTag.attr("src"));
-				}})
-				.collect(Collectors.toList());
+		do {
+			Document doc = Jsoup.parse(getHtml(driver, "section")); //openConnection(postUrl, Method.GET, null, null);
+			Element article = doc.getElementsByTag("article").get(0);
+
+			// ISO 8601 (2018-09-27T14:19:44.000Z)
+			if (StringUtils.isBlank(date)) {
+				date = article.getElementsByTag("time").get(0).attr("datetime");
+				log.info("Post Date: {}", date);
+			}
+
+			// TODO: FFVAD 클래스명 변경 예의주시
+			for (Element ffvad : article.getElementsByClass("FFVAD")) {
+				String alt = ffvad.attr("alt").replaceAll("[\\n\\r]", "");
+				String src = ffvad.attr("src");
+
+				if (urlSet.contains(src) == false) {
+					log.info("img src = " + src);
+					urlSet.add(src);
+					contentList.add(new LinkedHashMap<String, String>() {{
+						put(alt, src);
+					}});
+				}
+			}
+		} while (clickRightAndHasMore(driver));
+		driver.quit();
+
+		dataContentMap.put(date, contentList);
 		log.info("Post images count: {}", contentList.size());
 
-		return new HashMap<String, List<LinkedHashMap<String, String>>>() {{
-			put(date, contentList);
-		}};
+		return dataContentMap;
 	}
 
-	@Override
-	protected Document openConnection(String url, Method method, Map<String, String> requestHeaders, Map<String, String> requestBody) {
-		WebDriver driver = getChromeDriver(url);
-		Document doc = Jsoup.parse(getHtml(driver, "section"));
-		driver.quit();
-		return doc;
+	/**
+	 * 여러 사진이 있는 경우 > 버튼을 클릭하여 다음 사진을 가져온다.
+	 * > 버튼이 있어서 클릭에 성공하면 true, 버튼이 없어서 클릭에 실패하면 false를 반환한다.
+	 *
+	 * @param driver postUrl과 연결중인 driver 객체
+	 * @return > 버튼이 있어서 클릭 성공 시 true, 없어서 클릭 실패 시 false
+	 */
+	private boolean clickRightAndHasMore(WebDriver driver) {
+		//  _6CZji <- button
+		//    coreSpriteRightChevron <- div
+		try {
+			WebElement rightButton = driver.findElement(By.cssSelector("button[class='  _6CZji']")); // 인스타 다음 사진 보기 버튼
+			rightButton.click();
+
+			// 위 기능으로 버튼 클릭이 동작 안할 시 아래 방법 고려
+//			Actions actions = new Actions(driver);
+//			actions.moveToElement(rightButton).click().perform();
+
+			log.info("Click!");
+
+			return true;
+		} catch (Exception e) {
+			// 다음 사진 보기 버튼 없으면 에러
+//			e.printStackTrace();
+			return false;
+		}
 	}
+
+	// 현재 쓰이지 않음 -> 추후 상황 봐서 지울 것
+//	@Override
+//	protected Document openConnection(String url, Method method, Map<String, String> requestHeaders, Map<String, String> requestBody) {
+//		WebDriver driver = getChromeDriver(url);
+//		Document doc = Jsoup.parse(getHtml(driver, "section"));
+//		driver.quit();
+//		return doc;
+//	}
 
 	@Override
 	protected boolean isInRange(String date) {
@@ -218,9 +262,5 @@ public class InstagramCrawler extends Crawler {
 				.map(x -> x.getElementsByTag("a"))
 				.map(e -> INSTAGRAM_URL + e.attr("href"))
 				.collect(Collectors.toList());
-	}
-
-	public static void main(String[] args) throws Exception {
-
 	}
 }
