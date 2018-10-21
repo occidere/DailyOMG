@@ -1,6 +1,8 @@
 package org.occidere.dailyomg.crawler;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Connection.Method;
 import org.jsoup.Jsoup;
@@ -13,10 +15,14 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.CollectionUtils;
 
+import java.io.File;
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -166,7 +172,8 @@ public class InstagramCrawler extends Crawler {
 	@Override
 	protected boolean isInRange(String date) {
 		LocalDate postDate = LocalDateTime.parse(date, DateTimeFormatter.ISO_DATE_TIME).toLocalDate(); // ISO 8601
-		int days = Period.between(postDate, LocalDate.now()).getDays();
+		long days = Math.abs(ChronoUnit.DAYS.between(postDate, LocalDate.now()));
+		log.warn("Days: {}\tRange: {}", days, range);
 
 		return days <= range;
 	}
@@ -214,8 +221,6 @@ public class InstagramCrawler extends Crawler {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Crawler crawler = new InstagramCrawler("https://www.instagram.com/wm_ohmygirl/?hl=ko");
-		crawler.setRange(3);
-		crawler.getResult().forEach(System.out::println);
+
 	}
 }
