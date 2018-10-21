@@ -8,9 +8,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.time.LocalDate;
-import java.time.Period;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -60,8 +60,9 @@ public class ScheduleCrawler extends Crawler {
 		date = String.format("%04d.%s", now.getYear(), date.substring(0, 5));
 
 		LocalDate postDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy.MM.dd"));
-		int days = Period.between(now, postDate).getDays();
+		long diff = ChronoUnit.DAYS.between(LocalDate.now(), postDate); // 미래면 양수, 현재는 0이 나옴
+		log.info("0 <= diff({}) <= range({}) ?", diff, range);
 
-		return 0 <= days && days <= range;
+		return 0 <= diff && diff <= range;
 	}
 }
