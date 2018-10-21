@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.LinkedHashMap;
@@ -80,7 +79,7 @@ public class DailyOmgController {
 		}
 	}
 
-	/********** healt **********/
+	/********** health **********/
 
 	@RequestMapping(value = "/health", method = RequestMethod.GET)
 	public Mono<Long> healthCheck() {
