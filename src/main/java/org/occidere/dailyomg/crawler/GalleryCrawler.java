@@ -8,8 +8,8 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -128,8 +128,9 @@ public class GalleryCrawler extends Crawler {
 	@Override
 	protected boolean isInRange(String date) {
 		LocalDate postDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yy.MM.dd"));
-		int days = Period.between(postDate, LocalDate.now()).getDays();
+		long diff = Math.abs(ChronoUnit.DAYS.between(postDate, LocalDate.now()));
+		log.info("diff({}) <= range({}) ?", diff, range);
 
-		return days <= range;
+		return diff <= range;
 	}
 }
