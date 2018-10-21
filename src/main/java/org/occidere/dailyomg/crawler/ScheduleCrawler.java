@@ -8,9 +8,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.time.LocalDate;
-import java.time.Period;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,28 +29,39 @@ public class ScheduleCrawler extends Crawler {
 			String params = String.format("&year=%04d&month=%02d", now.getYear(), now.getMonthValue());
 
 			Document doc = openConnection(SCHEDULE_URL + params, Method.GET, null, null);
-			Elements mediaNoMargins = doc.getElementsByClass("media no-margin");
+			/* today 만 media bg-today no-margin 이라 정규식으로 잡음 */
+			Elements mediaNoMargins = doc.select("[class~=^media.*no-margin$]");
 
 			for (Element mediaNoMargin : mediaNoMargins) {
 				String date = mediaNoMargin.getElementsByClass("visible-xs").first().text();
 
 				if (isInRange(date)) {
-					scheduleList.addAll(
-							mediaNoMargin.getElementsByTag("li").stream()
-									.map(li ->
-											new LinkedHashMap<String, String>() {{
-												put(date, StringUtils.trimToEmpty(li.text()));
-											}}
-									)
-									.collect(Collectors.toList())
-					);
+					List<LinkedHashMap<String, String>> dailyScheduleList = mediaNoMargin.getElementsByTag("li")
+							.stream()
+							.map(li ->
+									new LinkedHashMap<String, String>() {{
+										put(date, StringUtils.trimToEmpty(li.text()));
+									}}
+							)
+							.collect(Collectors.toList());
+
+					/* 일정이 없어도 출력하기 위한 값 추가 */
+					if (dailyScheduleList.isEmpty()) {
+						dailyScheduleList.add(new LinkedHashMap<String, String>() {{
+							put(date, "공식 일정 없음");
+						}});
+					}
+
+					scheduleList.addAll(dailyScheduleList); // 일정 전부 리스트에 담는다
 				}
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage());
 		}
 
-		return scheduleList;
+		log.info("{}", scheduleList);
+
+		return scheduleList; // 1일부터 31일까지 순차 크롤링이기 때문에 항상 정렬이 되어있다
 	}
 
 	@Override
@@ -60,8 +71,9 @@ public class ScheduleCrawler extends Crawler {
 		date = String.format("%04d.%s", now.getYear(), date.substring(0, 5));
 
 		LocalDate postDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy.MM.dd"));
-		int days = Period.between(now, postDate).getDays();
+		long diff = ChronoUnit.DAYS.between(LocalDate.now(), postDate); // 미래면 양수, 현재는 0이 나옴
+//		log.info("0 <= diff({}) < range({}) ?", diff, range);
 
-		return 0 <= days && days <= range;
+		return 0 <= diff && diff <= range;
 	}
 }
