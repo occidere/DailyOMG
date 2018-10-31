@@ -9,12 +9,16 @@ import org.occidere.dailyomg.crawler.ScheduleCrawler;
 import org.occidere.dailyomg.notification.LineNotify;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -52,15 +56,33 @@ public class DailyOmgController {
 	}
 
 	/**
-	 * 이미지를 json으로 말아서 line-api-server 의 /push/image 로 전달
+	 * 이미지를 json으로 말아서 line-api-server 의 /push/image 로 전달.
+	 * 전송할 사진이 없으면 현재 시간과 함께 전송할 사진이 없다는 텍스트 메시지를 보낸다.
 	 * @param range
 	 * @throws Exception
 	 */
 	@RequestMapping(value = "/notify/line/ohmygirl/image", method = RequestMethod.GET)
 	public void notifyLineOhmygirlImage(@RequestParam(value = "range", defaultValue = "1") int range) throws Exception {
-		String jsonBody = new ObjectMapper().writeValueAsString(getOhmygirlImageList(range));
-		List<String> res = IOUtils.readLines(getResponse(lineBotApiUrl + "/push/image", jsonBody), "UTF-8");
-		for(String line : res) {
+		List<LinkedHashMap<String, String>> dataList = getOhmygirlImageList(range);
+		String url = lineBotApiUrl + "/push/image";
+
+		/* 전송할 이미지가 없는 경우 현재 날짜를 담아 텍스트 메시지를 보낸다 */
+		if (CollectionUtils.isEmpty(dataList)) {
+			url = lineBotApiUrl + "/push/text"; // 요청 주소를 텍스트 메시지 주소로 변경
+			String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // 현재 날짜
+
+			/* 전송할 텍스트 메시지 */
+			dataList = new ArrayList<LinkedHashMap<String, String>>() {{
+				add(new LinkedHashMap<String, String>() {{
+					put(date, "새로운 사진 없음");
+				}});
+			}};
+		}
+
+		String jsonBody = new ObjectMapper().writeValueAsString(dataList);
+		List<String> res = IOUtils.readLines(getResponse(url, jsonBody), "UTF-8");
+
+		for (String line : res) {
 			log.info(line);
 		}
 	}
