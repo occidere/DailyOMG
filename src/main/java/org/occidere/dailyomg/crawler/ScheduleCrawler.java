@@ -72,7 +72,6 @@ public class ScheduleCrawler extends Crawler {
 
 	@Override
 	protected boolean isInRange(String date) {
-		System.out.println("Date = " + date);
 		LocalDate now = LocalDate.now(ZoneId.of("Asia/Seoul"));
 		// 10.08(월) -> 2018.10.08
 		date = String.format("%04d.%s", now.getYear(), date.substring(0, 5));
