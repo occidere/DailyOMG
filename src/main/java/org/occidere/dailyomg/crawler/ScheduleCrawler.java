@@ -26,7 +26,7 @@ public class ScheduleCrawler extends Crawler {
 
 		try {
 			LocalDate now = LocalDate.now(ZoneId.of("Asia/Seoul"));
-			String params = String.format("&year=%04d&month=%02d", now.getYear(), now.getMonthValue());
+			String params = String.format("&year=%04d&month=%d", now.getYear(), now.getMonthValue());
 
 			Document doc = openConnection(SCHEDULE_URL + params, Method.GET, null, null);
 			/* today 만 media bg-today no-margin 이라 정규식으로 잡음 */
