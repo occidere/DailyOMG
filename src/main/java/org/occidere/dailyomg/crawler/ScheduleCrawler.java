@@ -14,7 +14,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class ScheduleCrawler extends Crawler {
@@ -35,27 +34,34 @@ public class ScheduleCrawler extends Crawler {
 			for (Element mediaNoMargin : mediaNoMargins) {
 				String date = mediaNoMargin.getElementsByClass("visible-xs").first().text();
 
-				if (isInRange(date)) {
-					List<LinkedHashMap<String, String>> dailyScheduleList = mediaNoMargin.getElementsByTag("li")
-							.stream()
-							.map(li ->
-									new LinkedHashMap<String, String>() {{
-										put(date, StringUtils.trimToEmpty(li.text()));
-									}}
-							)
-							.collect(Collectors.toList());
+				// 9.01 -> 09.01
+				if (date.split("\\.")[0].length() < 2) {
+					date = "0" + date;
+				}
 
-					/* 일정이 없어도 출력하기 위한 값 추가 */
-					if (dailyScheduleList.isEmpty()) {
-						dailyScheduleList.add(new LinkedHashMap<String, String>() {{
-							put(date, "공식 일정 없음");
-						}});
+				if (isInRange(date)) {
+					List<LinkedHashMap<String, String>> dailyScheduleList = new ArrayList<>();
+
+					// 일정이 있으면 일정 리스트 값을, 없으면 없다는 메시지를 담을 준비
+					Elements scheduleElements = mediaNoMargin.getElementsByTag("li");
+					List<String> schedules = scheduleElements.eachText();
+					if (schedules.isEmpty()) {
+						schedules = new ArrayList<>();
+						schedules.add("공식 일정 없음");
+					}
+
+					// 일정 값을 trim
+					for (String schedule : schedules) {
+						LinkedHashMap<String, String> dateScheduleMap = new LinkedHashMap<>();
+						dateScheduleMap.put(date, StringUtils.trimToEmpty(schedule));
+						dailyScheduleList.add(dateScheduleMap);
 					}
 
 					scheduleList.addAll(dailyScheduleList); // 일정 전부 리스트에 담는다
 				}
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			log.error(e.getMessage());
 		}
 
@@ -66,6 +72,7 @@ public class ScheduleCrawler extends Crawler {
 
 	@Override
 	protected boolean isInRange(String date) {
+		System.out.println("Date = " + date);
 		LocalDate now = LocalDate.now(ZoneId.of("Asia/Seoul"));
 		// 10.08(월) -> 2018.10.08
 		date = String.format("%04d.%s", now.getYear(), date.substring(0, 5));
