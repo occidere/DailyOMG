@@ -8,8 +8,9 @@ import org.springframework.context.annotation.ComponentScan;
 @Slf4j
 @SpringBootApplication
 @ComponentScan(value = "org.occidere.dailyomg")
-public class Main {
-	public static void main(String[] args) {
-		SpringApplication.run(Main.class, args);
-	}
+public class DailyOMGApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(DailyOMGApplication.class, args);
+    }
 }
